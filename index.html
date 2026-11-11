@@ -1237,10 +1237,21 @@
                 age ? `연령대(${age})` : ''
             ].filter(Boolean).join(', ');
 
-            // Generate Both English & Korean Prompts. Nickname stays in the profile summary, not in the image prompt.
-            generatedPromptEn = `A cute, friendly 3D character illustration${characterDetailsEn ? ` of a ${characterDetailsEn} character` : ' of a friendly character'} who likes ${enPromptParts[0]}, enjoys ${enPromptParts[1]}, loves eating ${enPromptParts[2]}, listens to ${enPromptParts[3]}, dreams of becoming ${enPromptParts[4]}, is great at ${enPromptParts[5]}, with background of ${enPromptParts[6]}, bright cheerful lighting, highly detailed 3D render.`;
+            // Automatically choose one illustration style for both language versions.
+            const illustrationStyles = [
+                { kr: '귀여운 3D 애니메이션 일러스트', en: 'cute 3D animated illustration' },
+                { kr: '따뜻한 동화책 일러스트', en: 'warm storybook illustration' },
+                { kr: '밝고 친근한 웹툰 일러스트', en: 'bright friendly webtoon illustration' },
+                { kr: '부드러운 수채화 일러스트', en: 'soft watercolor illustration' },
+                { kr: '아기자기한 클레이 아트', en: 'playful clay art illustration' },
+                { kr: '깔끔한 플랫 벡터 일러스트', en: 'clean flat vector illustration' }
+            ];
+            const selectedStyle = illustrationStyles[Math.floor(Math.random() * illustrationStyles.length)];
 
-            generatedPromptKr = `밝고 행복한 스타일의 3D 입체 캐릭터 이미지${characterDetailsKr ? `: ${characterDetailsKr}` : ''}: 좋아하는 캐릭터(${krPromptParts[0]}), 좋아하는 색상(${krPromptParts[1]}), 즐겨 먹는 음식(${krPromptParts[2]}), 즐겨 듣는 음악(${krPromptParts[3]}), 멋진 꿈(${krPromptParts[4]}), 잘하는 특기(${krPromptParts[5]}), 배경 장소(${krPromptParts[6]}), 화사하고 입체감 있는 3D 그래픽.`;
+            // Fixed format: character profile infographic. All other visual choices are automatic.
+            generatedPromptKr = `이미지 제작 유형: 캐릭터 프로필 인포그래픽형. 그림 스타일: ${selectedStyle.kr}. 학생의 자기소개를 한 장의 밝고 친근한 세로형 캐릭터 프로필 인포그래픽으로 제작해 주세요. 중앙에는 자기소개를 대표하는 독창적이고 친근한 캐릭터를 크게 배치하고, 주변에는 7가지 취향을 각각 작은 그림 아이콘과 짧고 읽기 쉬운 한국어 문구로 표현해 주세요. 자기소개 정보: ${krPromptParts.join('; ')}.${characterDetailsKr ? ` 캐릭터의 선택적 표현 정보: ${characterDetailsKr}.` : ''} 좋아하는 동물이나 캐릭터는 중심 캐릭터의 모티프로 활용하고, 좋아하는 색상은 전체 색상 팔레트에 반영하세요. 음식, 음악, 꿈, 활동은 각각 알아보기 쉬운 소품이나 장면으로 표현하고, 가보고 싶은 장소는 배경의 일부로 자연스럽게 표현하세요. 학생의 답변과 선택된 그림 스타일을 고려하여 의상, 표정, 포즈, 장식, 배경의 세부 디자인과 정보 배치를 자동으로 조화롭게 결정하세요. 7가지 항목이 서로 겹치지 않게 구분하고, 충분한 여백과 높은 가독성을 유지하세요. 실제 인물 사진처럼 만들지 말고, 안전하고 긍정적인 자기소개용 그림으로 제작하세요. 개인정보를 추측하거나 추가하지 마세요. 글자는 정확한 한국어로 짧고 선명하게 표현하세요.`;
+
+            generatedPromptEn = `Image type: character profile infographic. Illustration style: ${selectedStyle.en}. Create one bright, friendly, portrait-oriented character profile infographic introducing a student. Place a large original, approachable character in the center and arrange seven clearly separated visual sections around it, each with a small illustration and a short, legible Korean label. Profile answers: ${krPromptParts.join('; ')}. English visual references: ${enPromptParts.join('; ')}.${characterDetailsEn ? ` Optional character appearance: ${characterDetailsEn}.` : ''} Use the favorite animal or character as inspiration for the central character and the favorite color as the main palette. Depict food, music, dream, and favorite activity as recognizable icons or small scenes, and incorporate the desired destination subtly into the background. Automatically choose matching clothing, expression, pose, decorative details, background, and layout to suit the answers and selected illustration style. Keep all seven sections readable and uncluttered, with generous spacing and strong contrast. Make it an illustrated character, not a realistic portrait. Do not infer or add personal information. Render short Korean labels accurately and clearly.`;
 
             // Default to Korean (KR) prompt display initially
             currentPromptLang = 'KR';
