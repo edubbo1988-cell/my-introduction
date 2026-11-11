@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나를 소개해요! - 디지털 교육 자료</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans KR for maximum legibility -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F4F1EA; /* Eye-pleasing cream/ivory tone */
+            color: #2D3748;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Notebook / Diary Index Tab Styling */
+        .index-tab {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border-top-left-radius: 1rem;
+            border-top-right-radius: 1rem;
+            position: relative;
+            bottom: -2px;
+        }
+
+        .index-tab.active-tab {
+            transform: translateY(-4px);
+            z-index: 20;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* Grayscale to Color slots on Page 1 */
+        .grayscale-slot {
+            filter: grayscale(100%) opacity(0.35);
+            transition: filter 0.6s ease, transform 0.4s ease, opacity 0.6s ease;
+        }
+
+        .colorful-slot {
+            filter: grayscale(0%) opacity(1.0);
+            transform: scale(1.03);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); filter: grayscale(100%); }
+            70% { transform: scale(1.1); filter: grayscale(0%); }
+            100% { transform: scale(1.03); }
+        }
+
+        /* Bounce animation for warning/wrong drop */
+        @keyframes bounceWrong {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+        .animate-wrong {
+            animation: bounceWrong 0.5s ease;
+        }
+
+        /* Drag over glow effect */
+        .drag-over-safe {
+            border-color: #10B981 !important;
+            background-color: #ECFDF5 !important;
+            transform: scale(1.02);
+        }
+
+        .drag-over-secret {
+            border-color: #F59E0B !important;
+            background-color: #FFFBEB !important;
+            transform: scale(1.02);
+        }
+
+        /* Choice Card Active Highlights on Page 2 */
+        .card-option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .card-option:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-option.selected-option {
+            border-color: #4F46E5 !important;
+            background-color: #EEF2FF !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.2);
+            transform: scale(1.03);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 md:p-6">
+
+    <!-- TOP INDEX TAB NAVIGATION HEADER -->
+    <header class="w-full max-w-5xl mx-auto flex justify-between items-end px-2 sm:px-6 pt-2 z-30">
+        <!-- Index Tabs -->
+        <div class="flex space-x-2 sm:space-x-3">
+            <button id="tabBtn1" onclick="switchTab(1)" 
+                    class="index-tab active-tab bg-emerald-500 text-white font-black text-base sm:text-lg md:text-xl py-3 px-4 sm:px-6 border-t-2 border-x-2 border-emerald-600 shadow-md flex items-center space-x-2">
+                <span>📌</span>
+                <span>1. 내 정보 안심 지킴이</span>
+            </button>
+            <button id="tabBtn2" onclick="switchTab(2)" 
+                    class="index-tab bg-amber-400 text-amber-950 font-black text-base sm:text-lg md:text-xl py-3 px-4 sm:px-6 border-t-2 border-x-2 border-amber-500 opacity-80 hover:opacity-100 flex items-center space-x-2">
+                <span>✨</span>
+                <span>2. AI 자기소개 카드</span>
+            </button>
+        </div>
+
+        <!-- Global Voice & Audio Controls -->
+        <div class="mb-2 flex items-center space-x-2">
+            <button onclick="speakPageGuide()" 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 sm:px-4 rounded-2xl shadow flex items-center space-x-1.5 text-xs sm:text-sm transition active:scale-95">
+                <span class="text-base sm:text-lg">🔊</span>
+                <span class="hidden sm:inline">설명 듣기</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN BINDER / NOTEBOOK CONTAINER -->
+    <main class="w-full max-w-5xl bg-amber-50/60 border-4 border-amber-200/80 rounded-b-3xl rounded-tr-3xl p-4 sm:p-6 md:p-8 shadow-2xl min-h-[750px] flex flex-col justify-between relative overflow-hidden">
+        
+        <!-- ========================================================================= -->
+        <!-- PAGE 1: 말해도 되는 것 & 비밀 정보 구분하기 (안전 교육) -->
+        <!-- ========================================================================= -->
+        <section id="page1" class="flex flex-col gap-6 w-full">
+            
+            <!-- Banner Instructions -->
+            <div class="bg-white border-2 border-emerald-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl animate-bounce">👉</span>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-black text-emerald-900">말해도 되는 정보와 소중한 비밀 정보를 구별해 보아요!</h2>
+                        <p class="text-xs sm:text-sm font-bold text-slate-500">스티커를 손이나 마우스로 잡고 알맞은 상자로 끌어다 놓으세요.</p>
+                    </div>
+                </div>
+                <button onclick="speakText('스티커를 잡고 말해도 되는 것은 왼쪽 소개 카드에, 소중한 개인정보는 오른쪽 비밀 보관함에 넣어주세요.')" 
+                        class="text-indigo-600 hover:text-indigo-800 font-bold text-xs sm:text-sm flex items-center gap-1 underline">
+                    🔊 읽어주기
+                </button>
+            </div>
+
+            <!-- Target Drop Zones Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Zone 1: Safe Self-Intro Card (말해도 돼요!) -->
+                <div id="zoneSafe" 
+                     ondragover="handleDragOver(event, 'safe')" 
+                     ondragleave="handleDragLeave(event, 'safe')" 
+                     ondrop="handleDrop(event, 'safe')"
+                     class="bg-white rounded-3xl border-4 border-dashed border-emerald-300 p-4 sm:p-5 flex flex-col shadow-md relative min-h-[360px] transition-all">
+                    
+                    <div class="flex items-center justify-between pb-3 border-b-2 border-emerald-100 mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-3xl">🌟</span>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-black text-emerald-800">말해도 돼요! (소개 카드)</h3>
+                                <p class="text-xs text-emerald-600 font-bold">친구나 사람들에게 말할 수 있어요</p>
+                            </div>
+                        </div>
+                        <span id="safeCounter" class="bg-emerald-100 text-emerald-900 font-black text-xs sm:text-sm px-3 py-1 rounded-full">0 / 5</span>
+                    </div>
+
+                    <!-- Slots Grid -->
+                    <div id="safeSlotsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Zone 2: Secret Personal Info Vault (쉿! 비밀이에요) -->
+                <div id="zoneSecret" 
+                     ondragover="handleDragOver(event, 'secret')" 
+                     ondragleave="handleDragLeave(event, 'secret')" 
+                     ondrop="handleDrop(event, 'secret')"
+                     class="bg-amber-100/50 rounded-3xl border-4 border-dashed border-amber-400 p-4 sm:p-5 flex flex-col shadow-md relative min-h-[360px] transition-all">
+                    
+                    <div class="flex items-center justify-between pb-3 border-b-2 border-amber-200 mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-3xl">🔒</span>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-black text-amber-900">쉿! 비밀이에요 (비밀 보관함)</h3>
+                                <p class="text-xs text-amber-700 font-bold">아무에게나 절대 말하지 않아요</p>
+                            </div>
+                        </div>
+                        <span id="secretCounter" class="bg-amber-200 text-amber-950 font-black text-xs sm:text-sm px-3 py-1 rounded-full">0 / 5</span>
+                    </div>
+
+                    <!-- Secret Vault Interior -->
+                    <div id="secretVaultArea" class="flex-1 bg-white/80 border-2 border-dashed border-amber-300 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                        <div class="text-5xl mb-2 cursor-pointer hover:scale-110 transition-transform" onclick="speakText('쉿! 비밀 보관함입니다. 집 주소, 전화번호 같은 소중한 개인정보는 여기에 보관해요.')">
+                            🔐
+                        </div>
+                        <p id="vaultPrompt" class="text-xs sm:text-sm font-bold text-amber-800">
+                            소중한 개인정보 스티커를<br>여기 비밀 상자 안으로 끌어다 넣으세요!
+                        </p>
+                        <div id="secretStickersList" class="w-full grid grid-cols-1 gap-2 mt-2">
+                            <!-- Secret Tags Rendered Here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- STICKER BANK / POOL -->
+            <section class="bg-white rounded-3xl p-4 sm:p-5 border-2 border-slate-200 shadow-md">
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">🏷️</span>
+                        <h3 class="text-base sm:text-lg font-black text-slate-800">스티커 조각들 (손이나 마우스로 옮기세요)</h3>
+                    </div>
+                    <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                        🔊 버튼을 누르면 읽어줍니다
+                    </span>
+                </div>
+
+                <div id="stickerPool" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 min-h-[110px]">
+                    <!-- Dynamic Stickers Rendered Here -->
+                </div>
+            </section>
+
+            <!-- Page 1 Completion Banner & Next Button -->
+            <div id="page1CompleteBanner" class="hidden bg-emerald-500 text-white rounded-3xl p-5 text-center shadow-xl border-4 border-emerald-300 animate-popIn flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3 text-left">
+                    <span class="text-5xl">🎉</span>
+                    <div>
+                        <h3 class="text-xl font-black">구분하기 성공! 완성이예요!</h3>
+                        <p class="text-sm font-bold opacity-90">안심 정보와 소중한 비밀을 모두 바르게 찾았어요.</p>
+                    </div>
+                </div>
+                <button onclick="switchTab(2)" class="bg-white text-emerald-800 hover:bg-emerald-50 font-black py-3 px-6 rounded-2xl shadow-lg transition active:scale-95 text-base flex items-center space-x-2">
+                    <span>✨ 2페이지 AI 자기소개서 만들러 가기</span>
+                    <span>👉</span>
+                </button>
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================================= -->
+        <!-- PAGE 2: 마법의 자기소개 카드 만들기 (7가지 질문 & AI 프롬프트) -->
+        <!-- ========================================================================= -->
+        <section id="page2" class="hidden flex-col gap-6 w-full">
+            
+            <!-- Safety Link Banner -->
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">🛡️</span>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-black text-amber-950">1페이지에서 배운 것처럼 비밀 정보는 쉿!</h2>
+                        <p class="text-xs sm:text-sm font-bold text-amber-800">실명과 연락처는 쓰지 않아요. 별명과 넓은 연령대, 좋아하는 취향을 선택해 보아요.</p>
+                    </div>
+                </div>
+                <button onclick="speakText('1페이지에서 배운 것처럼 실명과 전화번호는 적지 않아요. 별명을 쓰고, 성별과 연령대는 원할 때만 선택해요. 그리고 좋아하는 취향 7가지를 골라보아요.')" class="text-amber-800 font-bold text-xs sm:text-sm underline flex items-center gap-1">
+                    🔊 읽어주기
+                </button>
+            </div>
+
+            <!-- BASIC PROFILE: Nickname, gender, age range -->
+            <section class="bg-white rounded-3xl p-5 border-2 border-indigo-200 shadow-sm" id="basicProfile">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">👤</span>
+                        <h3 class="text-base sm:text-lg font-black text-indigo-900">나의 기본 정보</h3>
+                    </div>
+                    <button onclick="speakText('나의 별명, 성별, 연령대를 선택해 보세요. 성별과 연령대는 선택하지 않아도 괜찮아요.')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                </div>
+                <p class="text-xs sm:text-sm font-bold text-slate-600 mb-4">실제 이름 대신 별명을 사용해요. 성별과 연령대는 선택하지 않아도 괜찮아요.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="profileNickname" class="block text-sm font-black text-slate-700 mb-2">나의 별명</label>
+                        <input type="text" id="profileNickname" maxlength="20" placeholder="예: 행복이, 무지개"
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-3 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label for="profileGender" class="block text-sm font-black text-slate-700 mb-2">성별</label>
+                        <select id="profileGender" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-3 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                            <option value="">선택 안 함</option>
+                            <option value="여성">여성</option>
+                            <option value="남성">남성</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="profileAge" class="block text-sm font-black text-slate-700 mb-2">연령대</label>
+                        <select id="profileAge" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-3 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                            <option value="">선택 안 함</option>
+                            <option value="10세 미만">10세 미만</option>
+                            <option value="10대">10대</option>
+                            <option value="20대">20대</option>
+                            <option value="30대">30대</option>
+                            <option value="40대">40대</option>
+                            <option value="50대">50대</option>
+                            <option value="60대 이상">60대 이상</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7 QUESTIONS CONTAINER -->
+            <div class="space-y-6">
+
+                <!-- Q1: [동물/캐릭터] -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm" id="qBox1">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🐶</span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800">1. 좋아하는 동물이나 캐릭터는 무엇인가요?</h3>
+                        </div>
+                        <button onclick="speakText('좋아하는 동물이나 캐릭터는 무엇인가요?')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="qGrid1">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-2">
+                        <span class="text-sm font-bold text-slate-500">✏️ 직접 쓰기:</span>
+                        <input type="text" id="customInput1" onblur="checkPrivacyInput(this)" placeholder="예: 공룡, 아기곰, 스프런키" 
+                               class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Q2: [색상] -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm" id="qBox2">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🎨</span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800">2. 내가 좋아하는 색깔은 무엇인가요?</h3>
+                        </div>
+                        <button onclick="speakText('내가 좋아하는 색깔은 무엇인가요?')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="qGrid2">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-2">
+                        <span class="text-sm font-bold text-slate-500">✏️ 직접 쓰기:</span>
+                        <input type="text" id="customInput2" onblur="checkPrivacyInput(this)" placeholder="예: 에메랄드색, 무지개색" 
+                               class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Q3: [음식] -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm" id="qBox3">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🍕</span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800">3. 좋아하는 음식은 무엇인가요?</h3>
+                        </div>
+                        <button onclick="speakText('좋아하는 음식은 무엇인가요?')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="qGrid3">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-2">
+                        <span class="text-sm font-bold text-slate-500">✏️ 직접 쓰기:</span>
+                        <input type="text" id="customInput3" onblur="checkPrivacyInput(this)" placeholder="예: 떡볶이, 돈까스" 
+                               class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Q4: [음악/가수] -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm" id="qBox4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🎵</span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800">4. 좋아하는 음악이나 가수는 무엇인가요?</h3>
+                        </div>
+                        <button onclick="speakText('좋아하는 음악이나 가수는 무엇인가요?')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="qGrid4">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-2">
+                        <span class="text-sm font-bold text-slate-500">✏️ 직접 쓰기:</span>
+                        <input type="text" id="customInput4" onblur="checkPrivacyInput(this)" placeholder="예: BTS, 신나는 댄스곡" 
+                               class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Q5: [꿈/하고 싶은 일] -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm" id="qBox5">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🚀</span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800">5. 내가 하고 싶은 일(꿈)은 무엇인가요?</h3>
+                        </div>
+                        <button onclick="speakText('내가 하고 싶은 일이나 꿈은 무엇인가요?')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="qGrid5">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-2">
+                        <span class="text-sm font-bold text-slate-500">✏️ 직접 쓰기:</span>
+                        <input type="text" id="customInput5" onblur="checkPrivacyInput(this)" placeholder="예: 요리사, 유튜브 크리에이터" 
+                               class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Q6: [활동/특기] -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm" id="qBox6">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🧩</span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800">6. 가장 좋아하는 활동이나 잘하는 것은 무엇인가요?</h3>
+                        </div>
+                        <button onclick="speakText('가장 좋아하는 활동이나 잘하는 것은 무엇인가요?')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="qGrid6">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-2">
+                        <span class="text-sm font-bold text-slate-500">✏️ 직접 쓰기:</span>
+                        <input type="text" id="customInput6" onblur="checkPrivacyInput(this)" placeholder="예: 자전거 타기, 보드게임" 
+                               class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Q7: [장소/배경] -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm" id="qBox7">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🏖️</span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800">7. 가보고 싶은 멋진 장소는 어디인가요?</h3>
+                        </div>
+                        <button onclick="speakText('가보고 싶은 멋진 장소는 어디인가요?')" class="text-xs bg-slate-100 p-1.5 rounded-xl">🔊 읽기</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="qGrid7">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-2">
+                        <span class="text-sm font-bold text-slate-500">✏️ 직접 쓰기:</span>
+                        <input type="text" id="customInput7" onblur="checkPrivacyInput(this)" placeholder="예: 워터파크, 제주도" 
+                               class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Generate Button Area -->
+            <div class="mt-4 text-center">
+                <button onclick="generateAICard()" 
+                        class="bg-gradient-to-r from-amber-500 via-indigo-600 to-emerald-500 hover:from-amber-600 hover:to-emerald-600 text-white font-black text-lg sm:text-xl py-4 px-8 rounded-3xl shadow-xl transform transition hover:scale-105 active:scale-95 flex items-center justify-center space-x-3 mx-auto">
+                    <span>✨</span>
+                    <span>마법의 AI 자기소개 카드 만들기</span>
+                    <span>🚀</span>
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER INFO -->
+    <footer class="w-full max-w-5xl mx-auto mt-4 text-center text-xs font-bold text-slate-500 pb-4">
+        나를 소개해요! - 발달장애인을 위한 디지털 개인정보 보호 및 인터랙티브 자기소개 교육 교구
+    </footer>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODALS & POPUPS -->
+    <!-- ========================================================================= -->
+
+    <!-- Privacy Warning Modal (When user types private info) -->
+    <div id="privacyWarningModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border-4 border-amber-400 animate-popIn">
+            <span class="text-6xl mb-2 inline-block">⚠️</span>
+            <h3 class="text-xl font-black text-amber-900">쉿! 이건 비밀 정보일 수 있어요!</h3>
+            <p class="text-sm font-bold text-slate-600 mt-2 leading-relaxed">
+                1페이지에서 배운 것처럼 전화번호, 집 주소, 이름 같은 개인정보는 직접 쓰지 않아요.<br>
+                <span class="text-emerald-600 font-extrabold">내가 좋아하는 단어만 작성해 볼까요?</span>
+            </p>
+            <button onclick="closePrivacyModal()" class="mt-5 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 px-6 rounded-2xl shadow transition active:scale-95 text-base">
+                네, 이해했어요!
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Result Modal -->
+    <div id="aiResultModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border-4 border-indigo-400 relative max-h-[90vh] overflow-y-auto animate-popIn">
+            
+            <button onclick="closeAIModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-black text-2xl p-1">✕</button>
+
+            <div class="text-center">
+                <span class="text-5xl inline-block mb-1">🎉</span>
+                <h3 class="text-2xl font-black text-indigo-900">나만의 멋진 자기소개 카드 완성이예요!</h3>
+                <p class="text-xs sm:text-sm font-bold text-slate-500 mt-1">안심할 수 있는 정보로 만들어진 소개 카드입니다.</p>
+            </div>
+
+            <!-- Korean Summary List -->
+            <div class="my-5 bg-indigo-50/70 border-2 border-indigo-200 rounded-2xl p-4">
+                <h4 class="text-base font-black text-indigo-900 mb-3 border-b border-indigo-200 pb-2 text-center flex items-center justify-center space-x-2">
+                    <span>🌈</span>
+                    <span>나를 소개합니다!</span>
+                </h4>
+                <ul id="aiSummaryList" class="space-y-2 text-xs sm:text-sm font-bold text-slate-700">
+                    <!-- Populated dynamically -->
+                </ul>
+            </div>
+
+            <!-- AI Prompt Generator Box -->
+            <div class="bg-slate-900 text-slate-100 rounded-2xl p-4 text-left border border-slate-700 relative">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800">
+                    <span id="promptHeaderTitle" class="text-xs font-bold text-indigo-300">🤖 AI 이미지 생성용 프롬프트 (한국어 설명)</span>
+                    
+                    <div class="flex items-center space-x-2">
+                        <!-- Prompt Language Toggle Button -->
+                        <button id="langToggleBtn" onclick="togglePromptLanguage()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 text-xs font-black px-2.5 py-1 rounded-xl transition flex items-center space-x-1">
+                            <span>🇺🇸</span>
+                            <span>English</span>
+                        </button>
+                        
+                        <!-- Copy Button -->
+                        <button onclick="copyPromptText()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1 rounded-xl transition">
+                            📋 복사
+                        </button>
+                    </div>
+                </div>
+                <p id="promptText" class="font-mono text-xs text-slate-300 leading-relaxed select-all">
+                    <!-- Generated Prompt -->
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="speakAISummary()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow flex items-center justify-center space-x-2 transition active:scale-95">
+                    <span>🔊</span>
+                    <span>전체 내용 읽어주기</span>
+                </button>
+                <button onclick="closeAIModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 px-6 rounded-2xl transition active:scale-95">
+                    창 닫기
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Canvas for Confetti -->
+    <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+
+    <!-- ========================================================================= -->
+    <!-- APPLICATION JAVASCRIPT LOGIC -->
+    <!-- ========================================================================= -->
+    <script>
+        /* ---------------------------------------------------
+           1. DATA STRUCTURES & DATA INITIALIZATION
+        --------------------------------------------------- */
+        // Page 1 Items (Interleaved Safe & Secret for anti-memorization & engaging learning)
+        const ITEMS = [
+            { id: 'safe-food', category: 'safe', title: '내가 좋아하는 음식', icon: '🍕', desc: '떡볶이, 치킨 등 좋아하는 음식 이야기' },
+            { id: 'secret-address', category: 'secret', title: '우리 집 상세 주소', icon: '🏠', desc: '집 주소는 모르는 사람에게 알려주지 않아요' },
+            { id: 'safe-hobby', category: 'safe', title: '내 취미와 특기', icon: '🎨', desc: '그림 그리기, 음악 듣기 등 좋아하는 취미' },
+            { id: 'secret-id', category: 'secret', title: '주민등록번호', icon: '🆔', desc: '가장 소중한 개인 식별 비밀번호예요' },
+            { id: 'safe-color', category: 'safe', title: '좋아하는 색깔', icon: '🌈', desc: '파란색, 노란색 등 좋아하는 색깔 이야기' },
+            { id: 'secret-pw', category: 'secret', title: '우리 집 도어락 비밀번호', icon: '🔑', desc: '비밀번호는 나만 알고 있어야 해요' },
+            { id: 'safe-animal', category: 'safe', title: '좋아하는 동물', icon: '🐶', desc: '강아지, 고양이 등 귀여운 동물 이야기' },
+            { id: 'secret-phone', category: 'secret', title: '나와 가족 전화번호', icon: '📱', desc: '전화번호는 아무에게나 보여주지 않아요' },
+            { id: 'safe-dream', category: 'safe', title: '내 멋진 꿈과 장래희망', icon: '🌟', desc: '내가 되고 싶은 멋진 꿈 이야기' },
+            { id: 'secret-bank', category: 'secret', title: '통장 및 돈 정보', icon: '💳', desc: '돈이나 통장에 관한 정보는 비밀이에요' }
+        ];
+
+        // Page 2 Questions & Option Definitions
+        const QUESTIONS = [
+            {
+                id: 1,
+                title: '동물/캐릭터',
+                icon: '🐶',
+                options: [
+                    { label: '강아지', icon: '🐶', en: 'a cute puppy' },
+                    { label: '고양이', icon: '🐱', en: 'a friendly kitten' },
+                    { label: '공룡', icon: '🦖', en: 'a cute little dinosaur' },
+                    { label: '자동차', icon: '🚗', en: 'a bright toy car' },
+                    { label: '인형', icon: '🧸', en: 'a fluffy teddy bear' }
+                ]
+            },
+            {
+                id: 2,
+                title: '색상',
+                icon: '🎨',
+                options: [
+                    { label: '빨간색', icon: '🔴', en: 'warm red color theme' },
+                    { label: '파란색', icon: '🔵', en: 'bright blue color theme' },
+                    { label: '노란색', icon: '🟡', en: 'cheerful yellow color theme' },
+                    { label: '초록색', icon: '🟢', en: 'fresh green color theme' },
+                    { label: '보라색', icon: '🟣', en: 'lovely purple color theme' }
+                ]
+            },
+            {
+                id: 3,
+                title: '음식',
+                icon: '🍕',
+                options: [
+                    { label: '피자', icon: '🍕', en: 'delicious pizza' },
+                    { label: '치킨', icon: '🍗', en: 'crispy fried chicken' },
+                    { label: '스파게티', icon: '🍝', en: 'tasty spaghetti' },
+                    { label: '과일', icon: '🍎', en: 'sweet fresh fruits' },
+                    { label: '아이스크림', icon: '🍦', en: 'yummy ice cream' }
+                ]
+            },
+            {
+                id: 4,
+                title: '음악/가수',
+                icon: '🎵',
+                options: [
+                    { label: 'K-POP 아이돌', icon: '🎤', en: 'K-pop music vibe with headphones' },
+                    { label: '신나는 댄스', icon: '🎧', en: 'exciting dance music' },
+                    { label: '피아노 클래식', icon: '🎹', en: 'peaceful piano music' },
+                    { label: '신나는 록', icon: '🎸', en: 'fun rock guitar music' },
+                    { label: '헤드폰 음악', icon: '🎼', en: 'listening to music on colorful headphones' }
+                ]
+            },
+            {
+                id: 5,
+                title: '꿈/하고 싶은 일',
+                icon: '🚀',
+                options: [
+                    { label: '우주비행사', icon: '🚀', en: 'an astronaut exploring space' },
+                    { label: '미술가', icon: '🎨', en: 'a creative artist holding a paintbrush' },
+                    { label: '컴퓨터 전문가', icon: '💻', en: 'a smart computer programmer' },
+                    { label: '축구 선수', icon: '⚽', en: 'a cool soccer player' },
+                    { label: '선생님/의사', icon: '🩺', en: 'a kind doctor or teacher' }
+                ]
+            },
+            {
+                id: 6,
+                title: '활동/특기',
+                icon: '🧩',
+                options: [
+                    { label: '노래 부르기', icon: '🎵', en: 'singing happily' },
+                    { label: '그림 그리기', icon: '🎨', en: 'drawing colorful pictures' },
+                    { label: '블록 맞추기', icon: '🧩', en: 'building toy blocks' },
+                    { label: '컴퓨터 하기', icon: '💻', en: 'using a computer' },
+                    { label: '운동하기', icon: '⚽', en: 'playing outdoor sports' }
+                ]
+            },
+            {
+                id: 7,
+                title: '장소/배경',
+                icon: '🏖️',
+                options: [
+                    { label: '시원한 바다', icon: '🌊', en: 'sunny tropical beach' },
+                    { label: '신나는 놀이공원', icon: '🎡', en: 'magical amusement park' },
+                    { label: '신비로운 우주', icon: '🌌', en: 'starry galaxy space background' },
+                    { label: '편안한 숲속', icon: '🌳', en: 'beautiful green forest' },
+                    { label: '높은 산', icon: '⛰️', en: 'fresh mountain top' }
+                ]
+            }
+        ];
+
+        // State variables
+        let activeTab = 1;
+        let draggedItemId = null;
+        let placedItems = { safe: [], secret: [] };
+        let page2Selections = { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null };
+
+        // Generated Prompt States for Toggle (KR vs EN)
+        let generatedPromptEn = '';
+        let generatedPromptKr = '';
+        let currentPromptLang = 'KR'; // Default to Korean prompt display as requested
+
+        /* ---------------------------------------------------
+           2. WEB AUDIO API SYNTHESIZER
+        --------------------------------------------------- */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Success chime sound
+        function playChimeAudio() {
+            initAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, idx) => {
+                osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            });
+
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.45);
+        }
+
+        // Vault lock sound for secret items
+        function playVaultAudio() {
+            initAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(45, now + 0.15);
+
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+
+        // Warning bounce sound
+        function playWarningAudio() {
+            initAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.setValueAtTime(170, now + 0.12);
+
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        // Victory Fanfare
+        function playFanfareAudio() {
+            initAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+            freqs.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.2, now + i * 0.09);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.55);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.09);
+                osc.stop(now + i * 0.09 + 0.55);
+            });
+        }
+
+        /* ---------------------------------------------------
+           3. TTS SPEECH SYNTHESIS (Gentle & Slow Voice)
+        --------------------------------------------------- */
+        let preferredVoice = null;
+
+        // Dynamic Voice Selection for High-Quality Korean Voices
+        function loadBestKoreanVoice() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) return;
+
+            const koVoices = voices.filter(v => v.lang.replace('_', '-').includes('ko'));
+            if (koVoices.length === 0) return;
+
+            const priorityKeywords = ['SunHi', 'InJoon', 'Natural', 'Google 한국어', 'Google', 'Yuna', 'Siri', 'Online'];
+
+            for (const kw of priorityKeywords) {
+                const matchedVoice = koVoices.find(v => v.name.includes(kw));
+                if (matchedVoice) {
+                    preferredVoice = matchedVoice;
+                    break;
+                }
+            }
+
+            if (!preferredVoice && koVoices.length > 0) {
+                preferredVoice = koVoices[0];
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadBestKoreanVoice;
+            loadBestKoreanVoice();
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                if (!preferredVoice) {
+                    loadBestKoreanVoice();
+                }
+
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.85;  // Slow, calm pace
+                utterance.pitch = 0.95; // Friendly pitch
+                
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speakPageGuide() {
+            if (activeTab === 1) {
+                speakText('1페이지, 내 정보 안심 지킴이입니다. 말해도 되는 정보와 소중한 비밀 정보를 손이나 마우스로 끌어 알맞은 상자에 구분해 보세요.');
+            } else {
+                speakText('2페이지입니다. 1페이지에서 배운 것처럼 비밀 정보는 쓰지 않고, 내가 좋아하는 7가지 취향만 골라 자기소개 카드를 완성해 보세요.');
+            }
+        }
+
+        /* ---------------------------------------------------
+           4. TAB NAVIGATION & INITIALIZATION
+        --------------------------------------------------- */
+        window.addEventListener('DOMContentLoaded', () => {
+            initPage1();
+            initPage2();
+        });
+
+        function switchTab(tabNum) {
+            initAudio();
+            activeTab = tabNum;
+
+            const tabBtn1 = document.getElementById('tabBtn1');
+            const tabBtn2 = document.getElementById('tabBtn2');
+            const page1 = document.getElementById('page1');
+            const page2 = document.getElementById('page2');
+
+            if (tabNum === 1) {
+                tabBtn1.classList.add('active-tab', 'bg-emerald-500', 'text-white');
+                tabBtn1.classList.remove('opacity-80', 'bg-amber-400', 'text-amber-950');
+
+                tabBtn2.classList.remove('active-tab', 'bg-emerald-500', 'text-white');
+                tabBtn2.classList.add('opacity-80', 'bg-amber-400', 'text-amber-950');
+
+                page1.classList.remove('hidden');
+                page1.classList.add('flex');
+                page2.classList.add('hidden');
+                page2.classList.remove('flex');
+
+                speakText('1페이지, 내 정보 안심 지킴이 페이지로 이동했습니다.');
+            } else {
+                tabBtn2.classList.add('active-tab', 'bg-emerald-500', 'text-white');
+                tabBtn2.classList.remove('opacity-80', 'bg-amber-400', 'text-amber-950');
+
+                tabBtn1.classList.remove('active-tab', 'bg-emerald-500', 'text-white');
+                tabBtn1.classList.add('opacity-80', 'bg-amber-400', 'text-amber-950');
+
+                page2.classList.remove('hidden');
+                page2.classList.add('flex');
+                page1.classList.add('hidden');
+                page1.classList.remove('flex');
+
+                speakText('2페이지, AI 자기소개 카드 만들기 페이지입니다. 좋아하는 취향을 선택해 주세요.');
+            }
+        }
+
+        /* ---------------------------------------------------
+           5. PAGE 1 LOGIC (Drag & Drop Classification)
+        --------------------------------------------------- */
+        function initPage1() {
+            renderSlotsGrid();
+            renderStickerPool();
+            updatePage1Counters();
+        }
+
+        function renderSlotsGrid() {
+            const grid = document.getElementById('safeSlotsGrid');
+            grid.innerHTML = '';
+
+            const safeItems = ITEMS.filter(i => i.category === 'safe');
+            safeItems.forEach(item => {
+                const isPlaced = placedItems.safe.includes(item.id);
+
+                const slot = document.createElement('div');
+                slot.id = `slot-${item.id}`;
+                slot.className = `border-2 border-emerald-200 rounded-2xl p-3 flex items-center space-x-3 transition-all duration-300 min-h-[68px] ${
+                    isPlaced ? 'bg-emerald-50 border-emerald-400 colorful-slot' : 'bg-slate-50 grayscale-slot'
+                }`;
+
+                slot.innerHTML = `
+                    <div class="text-3xl p-1 bg-white rounded-xl shadow-sm border border-emerald-100 flex-shrink-0">
+                        ${item.icon}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-black text-xs sm:text-sm ${isPlaced ? 'text-emerald-950' : 'text-slate-500'} truncate">
+                            ${isPlaced ? item.title : '??? (미완성)'}
+                        </p>
+                        <p class="text-[11px] ${isPlaced ? 'text-emerald-700 font-bold' : 'text-slate-400'} line-clamp-1">
+                            ${isPlaced ? item.desc : '스티커를 놓아주세요'}
+                        </p>
+                    </div>
+                    ${isPlaced ? '<span class="text-emerald-600 text-lg font-black">✓</span>' : ''}
+                `;
+
+                grid.appendChild(slot);
+            });
+        }
+
+        function renderStickerPool() {
+            const pool = document.getElementById('stickerPool');
+            pool.innerHTML = '';
+
+            ITEMS.forEach(item => {
+                const isPlaced = placedItems.safe.includes(item.id) || placedItems.secret.includes(item.id);
+                if (isPlaced) return;
+
+                const card = document.createElement('div');
+                card.id = `sticker-${item.id}`;
+                card.draggable = true;
+                card.className = `cursor-grab active:cursor-grabbing bg-white border-2 border-slate-300 hover:border-indigo-400 rounded-2xl p-2.5 shadow hover:shadow-md transition-all transform hover:-translate-y-1 flex flex-col items-center justify-between text-center select-none relative`;
+
+                card.ondragstart = (e) => handleDragStart(e, item.id);
+                card.ondragend = handleDragEnd;
+                card.onclick = () => handleStickerClick(item);
+
+                card.innerHTML = `
+                    <button type="button" 
+                            onclick="event.stopPropagation(); speakText('${item.title}. ${item.desc}')" 
+                            class="absolute top-1 right-1 text-[10px] bg-slate-100 hover:bg-indigo-100 text-slate-600 p-1 rounded-full border border-slate-200 transition" 
+                            title="음성으로 듣기">
+                        🔊
+                    </button>
+                    <div class="text-3xl my-1 pointer-events-none">${item.icon}</div>
+                    <p class="font-extrabold text-xs text-slate-800 pointer-events-none line-clamp-1 mt-1">
+                        ${item.title}
+                    </p>
+                `;
+
+                pool.appendChild(card);
+            });
+
+            if (pool.children.length === 0) {
+                pool.innerHTML = `
+                    <div class="col-span-full py-4 text-center text-emerald-600 font-black text-sm flex items-center justify-center space-x-2">
+                        <span>🌟</span>
+                        <span>모든 스티커를 완성했어요! 아래 완성 버튼을 확인하세요.</span>
+                    </div>
+                `;
+            }
+        }
+
+        function handleDragStart(e, itemId) {
+            initAudio();
+            draggedItemId = itemId;
+            e.dataTransfer.setData('text/plain', itemId);
+            e.dataTransfer.effectAllowed = 'move';
+            
+            const item = ITEMS.find(i => i.id === itemId);
+            if (item) speakText(item.title);
+        }
+
+        function handleDragEnd() {
+            draggedItemId = null;
+            document.getElementById('zoneSafe').classList.remove('drag-over-safe');
+            document.getElementById('zoneSecret').classList.remove('drag-over-secret');
+        }
+
+        function handleDragOver(e, zone) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (zone === 'safe') {
+                document.getElementById('zoneSafe').classList.add('drag-over-safe');
+            } else {
+                document.getElementById('zoneSecret').classList.add('drag-over-secret');
+            }
+        }
+
+        function handleDragLeave(e, zone) {
+            if (zone === 'safe') {
+                document.getElementById('zoneSafe').classList.remove('drag-over-safe');
+            } else {
+                document.getElementById('zoneSecret').classList.remove('drag-over-secret');
+            }
+        }
+
+        function handleDrop(e, targetZone) {
+            e.preventDefault();
+            const itemId = e.dataTransfer.getData('text/plain') || draggedItemId;
+            if (itemId) processPlacement(itemId, targetZone);
+            handleDragEnd();
+        }
+
+        function handleStickerClick(item) {
+            speakText(`${item.title}. 이 정보는 말해도 되는 소개 카드에 넣을까요, 비밀 보관함에 넣을까요?`);
+        }
+
+        function processPlacement(itemId, targetZone) {
+            const item = ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+
+            if (item.category === targetZone) {
+                if (targetZone === 'safe') {
+                    placedItems.safe.push(itemId);
+                    playChimeAudio();
+                    speakText(`맞아요! ${item.title}은(는) 소개 카드에 넣어도 괜찮아요.`);
+                } else {
+                    placedItems.secret.push(itemId);
+                    playVaultAudio();
+                    speakText(`쉿! 정답이에요. ${item.title}은(는) 소중한 비밀 보관함에 잘 넣었어요.`);
+                    renderSecretTagInVault(item);
+                }
+
+                renderSlotsGrid();
+                renderStickerPool();
+                updatePage1Counters();
+                checkPage1Completion();
+            } else {
+                playWarningAudio();
+                const zoneEl = targetZone === 'safe' ? document.getElementById('zoneSafe') : document.getElementById('zoneSecret');
+                zoneEl.classList.add('animate-wrong');
+                setTimeout(() => zoneEl.classList.remove('animate-wrong'), 500);
+
+                if (item.category === 'secret') {
+                    speakText(`쉿! ${item.title}은(는) 소중한 개인정보예요. 비밀 보관함에 넣어주세요.`);
+                } else {
+                    speakText(`${item.title}은(는) 나를 소개할 때 말해도 되는 정보예요! 소개 카드에 올려주세요.`);
+                }
+            }
+        }
+
+        function renderSecretTagInVault(item) {
+            const list = document.getElementById('secretStickersList');
+            const prompt = document.getElementById('vaultPrompt');
+            if (prompt) prompt.classList.add('hidden');
+
+            const tag = document.createElement('div');
+            tag.className = 'bg-amber-200/80 border border-amber-400 rounded-xl p-2 flex items-center justify-between text-amber-950 font-bold text-xs shadow-sm animate-popIn';
+            tag.innerHTML = `
+                <div class="flex items-center space-x-1.5">
+                    <span>🔒</span>
+                    <span>${item.title}</span>
+                </div>
+                <button onclick="speakText('${item.title}은 소중한 비밀 정보입니다.')" class="text-amber-800 hover:text-amber-950">🔊</button>
+            `;
+            list.appendChild(tag);
+        }
+
+        function updatePage1Counters() {
+            document.getElementById('safeCounter').innerText = `${placedItems.safe.length} / 5`;
+            document.getElementById('secretCounter').innerText = `${placedItems.secret.length} / 5`;
+        }
+
+        function checkPage1Completion() {
+            if (placedItems.safe.length === 5 && placedItems.secret.length === 5) {
+                playFanfareAudio();
+                triggerConfetti();
+                document.getElementById('page1CompleteBanner').classList.remove('hidden');
+                speakText('참 잘했어요! 말해도 되는 정보와 소중한 비밀을 모두 완벽하게 구분했습니다. 이제 2페이지에서 AI 자기소개 카드를 만들어 보아요!');
+            }
+        }
+
+        /* ---------------------------------------------------
+           6. PAGE 2 LOGIC (7 Questions & AI Prompt Generator)
+        --------------------------------------------------- */
+        function initPage2() {
+            QUESTIONS.forEach(q => {
+                const grid = document.getElementById(`qGrid${q.id}`);
+                if (!grid) return;
+                grid.innerHTML = '';
+
+                q.options.forEach((opt, idx) => {
+                    const card = document.createElement('div');
+                    card.className = `card-option bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 flex flex-col items-center justify-center text-center select-none`;
+                    card.id = `qCard-${q.id}-${idx}`;
+                    card.onclick = () => selectOption(q.id, idx, opt);
+
+                    card.innerHTML = `
+                        <span class="text-3xl mb-1">${opt.icon}</span>
+                        <span class="font-black text-xs text-slate-800">${opt.label}</span>
+                    `;
+                    grid.appendChild(card);
+                });
+            });
+        }
+
+        function selectOption(qId, idx, opt) {
+            initAudio();
+            page2Selections[qId] = { type: 'card', label: opt.label, icon: opt.icon, en: opt.en };
+
+            const customInput = document.getElementById(`customInput${qId}`);
+            if (customInput) customInput.value = '';
+
+            const qObj = QUESTIONS.find(q => q.id === qId);
+            qObj.options.forEach((_, i) => {
+                const c = document.getElementById(`qCard-${qId}-${i}`);
+                if (c) c.classList.remove('selected-option');
+            });
+
+            const selectedCard = document.getElementById(`qCard-${qId}-${idx}`);
+            if (selectedCard) selectedCard.classList.add('selected-option');
+
+            speakText(`${opt.label} 선택됨`);
+        }
+
+        function checkPrivacyInput(inputEl) {
+            const val = inputEl.value.trim();
+            if (!val) return;
+
+            const digitMatches = val.match(/\d/g);
+            const containsPhonePattern = digitMatches && digitMatches.length >= 6;
+            const privateKeywords = ['주소', '주민', '비밀번호', '전화', '번호', '010'];
+            const containsPrivacyKeyword = privateKeywords.some(kw => val.includes(kw));
+
+            if (containsPhonePattern || containsPrivacyKeyword) {
+                playWarningAudio();
+                inputEl.value = '';
+                showPrivacyModal();
+                speakText('쉿! 이건 비밀 정보일 수 있어요. 전화번호나 주소 대신, 내가 좋아하는 단어만 적어볼까요?');
+            } else {
+                const qId = inputEl.id.replace('customInput', '');
+                const qObj = QUESTIONS.find(q => q.id == qId);
+                if (qObj) {
+                    qObj.options.forEach((_, i) => {
+                        const c = document.getElementById(`qCard-${qId}-${i}`);
+                        if (c) c.classList.remove('selected-option');
+                    });
+                }
+                page2Selections[qId] = { type: 'custom', label: val, icon: '✏️', en: val };
+            }
+        }
+
+        function showPrivacyModal() {
+            document.getElementById('privacyWarningModal').classList.remove('hidden');
+        }
+
+        function closePrivacyModal() {
+            document.getElementById('privacyWarningModal').classList.add('hidden');
+        }
+
+        /* ---------------------------------------------------
+           7. AI PROMPT & CARD GENERATION (Default KR Prompt)
+        --------------------------------------------------- */
+        function getJosa(word, josa1, josa2) {
+            if (!word) return word;
+            const cleanWord = word.trim();
+            const lastChar = cleanWord.charAt(cleanWord.length - 1);
+            const code = lastChar.charCodeAt(0);
+            
+            if (code < 0xAC00 || code > 0xD7A3) {
+                return `${word}${josa1}`;
+            }
+            
+            const hasBatchim = (code - 0xAC00) % 28 !== 0;
+
+            if (josa1 === '으로' && josa2 === '로') {
+                const jongsung = (code - 0xAC00) % 28;
+                if (!hasBatchim || jongsung === 8) {
+                    return `${word}로`;
+                }
+                return `${word}으로`;
+            }
+
+            return hasBatchim ? `${word}${josa1}` : `${word}${josa2}`;
+        }
+
+        function generateAICard() {
+            initAudio();
+
+            let summaryItemsHtml = '';
+            let krPromptParts = [];
+            let enPromptParts = [];
+
+            QUESTIONS.forEach(q => {
+                let sel = page2Selections[q.id];
+                const customInput = document.getElementById(`customInput${q.id}`);
+
+                if (customInput && customInput.value.trim() !== '') {
+                    sel = { type: 'custom', label: customInput.value.trim(), icon: '✏️', en: customInput.value.trim() };
+                }
+
+                if (!sel) {
+                    sel = q.options[0];
+                }
+
+                summaryItemsHtml += `
+                    <li class="flex items-center space-x-2 bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                        <span class="text-xl">${sel.icon}</span>
+                        <span class="font-extrabold text-indigo-950">${q.title}:</span>
+                        <span class="text-indigo-700 font-bold">${sel.label}</span>
+                    </li>
+                `;
+
+                krPromptParts.push(`${q.title}: ${sel.label}`);
+                enPromptParts.push(sel.en);
+            });
+
+            const nickname = document.getElementById('profileNickname').value.trim();
+            const gender = document.getElementById('profileGender').value;
+            const age = document.getElementById('profileAge').value;
+
+            const profileRows = [];
+            if (nickname) profileRows.push({ label: '별명', value: nickname, icon: '🙂' });
+            if (gender) profileRows.push({ label: '성별', value: gender, icon: '👤' });
+            if (age) profileRows.push({ label: '연령대', value: age, icon: '🎂' });
+
+            const profileHtml = profileRows.map(item => `
+                <li class="flex items-center space-x-2 bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                    <span class="text-xl">${item.icon}</span>
+                    <span class="font-extrabold text-indigo-950">${item.label}:</span>
+                    <span class="text-indigo-700 font-bold">${item.value}</span>
+                </li>
+            `).join('');
+
+            document.getElementById('aiSummaryList').innerHTML = profileHtml + summaryItemsHtml;
+
+            // Optional profile details guide the character's general appearance.
+            const characterDetailsEn = [
+                gender === '여성' ? 'female-presenting' : gender === '남성' ? 'male-presenting' : gender === '기타' ? 'gender-neutral' : '',
+                age ? `in the ${age} age group` : ''
+            ].filter(Boolean).join(', ');
+            const characterDetailsKr = [
+                gender ? `성별 표현(${gender})` : '',
+                age ? `연령대(${age})` : ''
+            ].filter(Boolean).join(', ');
+
+            // Generate Both English & Korean Prompts. Nickname stays in the profile summary, not in the image prompt.
+            generatedPromptEn = `A cute, friendly 3D character illustration${characterDetailsEn ? ` of a ${characterDetailsEn} character` : ' of a friendly character'} who likes ${enPromptParts[0]}, enjoys ${enPromptParts[1]}, loves eating ${enPromptParts[2]}, listens to ${enPromptParts[3]}, dreams of becoming ${enPromptParts[4]}, is great at ${enPromptParts[5]}, with background of ${enPromptParts[6]}, bright cheerful lighting, highly detailed 3D render.`;
+
+            generatedPromptKr = `밝고 행복한 스타일의 3D 입체 캐릭터 이미지${characterDetailsKr ? `: ${characterDetailsKr}` : ''}: 좋아하는 캐릭터(${krPromptParts[0]}), 좋아하는 색상(${krPromptParts[1]}), 즐겨 먹는 음식(${krPromptParts[2]}), 즐겨 듣는 음악(${krPromptParts[3]}), 멋진 꿈(${krPromptParts[4]}), 잘하는 특기(${krPromptParts[5]}), 배경 장소(${krPromptParts[6]}), 화사하고 입체감 있는 3D 그래픽.`;
+
+            // Default to Korean (KR) prompt display initially
+            currentPromptLang = 'KR';
+            updatePromptDisplay();
+
+            playFanfareAudio();
+            triggerConfetti();
+
+            document.getElementById('aiResultModal').classList.remove('hidden');
+            
+            speakText('나를 소개합니다 카드 완성을 축하해요! 결과표에서 나의 멋진 선택들을 확인해 보세요.');
+        }
+
+        function togglePromptLanguage() {
+            currentPromptLang = (currentPromptLang === 'EN') ? 'KR' : 'EN';
+            updatePromptDisplay();
+            speakText(currentPromptLang === 'EN' ? '영어 이미지 생성 프롬프트로 전환되었습니다.' : '한국어 설명 프롬프트로 전환되었습니다.');
+        }
+
+        function updatePromptDisplay() {
+            const promptEl = document.getElementById('promptText');
+            const toggleBtn = document.getElementById('langToggleBtn');
+            const headerTitle = document.getElementById('promptHeaderTitle');
+
+            if (currentPromptLang === 'EN') {
+                promptEl.innerText = generatedPromptEn;
+                toggleBtn.innerHTML = `<span>🇰🇷</span><span>한국어</span>`;
+                headerTitle.innerText = `🤖 AI 이미지 생성용 프롬프트 (English Prompt)`;
+            } else {
+                promptEl.innerText = generatedPromptKr;
+                toggleBtn.innerHTML = `<span>🇺🇸</span><span>English</span>`;
+                headerTitle.innerText = `🤖 AI 이미지 생성용 프롬프트 (한국어 설명)`;
+            }
+        }
+
+        function closeAIModal() {
+            document.getElementById('aiResultModal').classList.add('hidden');
+        }
+
+        function copyPromptText() {
+            const promptText = document.getElementById('promptText').innerText;
+            
+            const textArea = document.createElement('textarea');
+            textArea.value = promptText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                speakText('프롬프트 내용이 복사되었습니다.');
+                alert('📋 프롬프트가 복사되었습니다! AI 이미지 생성기에 붙여넣어 보세요.');
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function speakAISummary() {
+            const getVal = (qId) => {
+                let sel = page2Selections[qId];
+                const customInput = document.getElementById(`customInput${qId}`);
+                if (customInput && customInput.value.trim() !== '') {
+                    return customInput.value.trim();
+                }
+                if (!sel) sel = QUESTIONS.find(q => q.id === qId).options[0];
+                return sel.label;
+            };
+
+            const animal = getVal(1);
+            const color = getVal(2);
+            const food = getVal(3);
+            const music = getVal(4);
+            const dream = getVal(5);
+            const hobby = getVal(6);
+            const place = getVal(7);
+            const nickname = document.getElementById('profileNickname').value.trim();
+            const gender = document.getElementById('profileGender').value;
+            const age = document.getElementById('profileAge').value;
+
+            const profileSpeech = [
+                nickname ? `별명은 ${nickname}이고요.` : '',
+                gender ? `성별은 ${gender}이고요.` : '',
+                age ? `연령대는 ${age}입니다.` : ''
+            ].filter(Boolean).join(' ');
+
+            const animalStr = getJosa(animal, '을', '를');
+            const colorStr = getJosa(color, '을', '를');
+            const foodStr = getJosa(food, '을', '를');
+            const dreamStr = getJosa(dream, '이', '가');
+            const hobbyStr = getJosa(hobby, '을', '를');
+            const placeStr = getJosa(place, '으로', '로');
+
+            const storyText = `${profileSpeech ? profileSpeech + ' ' : ''}당신은 ${animalStr} 정말 좋아하고, 멋진 ${colorStr} 좋아하며, 맛있는 ${foodStr} 즐겨 먹는군요! 신나는 ${music} 음악을 즐겨 듣고, 앞으로 멋진 ${dreamStr} 되는 꿈을 꾸고 있네요. ${hobbyStr} 가장 잘하고 좋아하며, 아름다운 ${placeStr} 떠나고 싶어하는 멋진 사람입니다!`;
+
+            speakText(storyText);
+        }
+
+        /* ---------------------------------------------------
+           8. CONFETTI ANIMATION SYSTEM
+        --------------------------------------------------- */
+        function triggerConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#10B981', '#6366F1', '#F59E0B', '#EC4899', '#3B82F6', '#F43F5E'];
+
+            for (let i = 0; i < 80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -20,
+                    size: Math.random() * 8 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vy: Math.random() * 3 + 2,
+                    vx: Math.random() * 4 - 2,
+                    rotation: Math.random() * 360,
+                    rotSpeed: Math.random() * 6 - 3
+                });
+            }
+
+            let animationId;
+            let startTime = Date.now();
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    p.rotation += p.rotSpeed;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (Date.now() - startTime < 3000) {
+                    animationId = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    cancelAnimationFrame(animationId);
+                }
+            }
+            render();
+        }
+
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('confettiCanvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
+</body>
+</html>
