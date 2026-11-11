@@ -230,6 +230,16 @@
                 <div id="stickerPool" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 min-h-[110px]">
                     <!-- Dynamic Stickers Rendered Here -->
                 </div>
+                <div id="clickChoicePanel" class="hidden mt-4 p-4 rounded-2xl border-2 border-indigo-300 bg-indigo-50 text-center" aria-live="polite">
+                    <p id="selectedStickerLabel" class="font-black text-indigo-900 mb-3">선택한 스티커</p>
+                    <p class="font-bold mb-3">어느 상자에 넣을까요?</p>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <button type="button" onclick="placeSelectedSticker('safe')" class="bg-emerald-600 text-white rounded-xl px-5 py-3 font-black">🌟 말해도 돼요</button>
+                        <button type="button" onclick="placeSelectedSticker('secret')" class="bg-amber-500 text-amber-950 rounded-xl px-5 py-3 font-black">🔒 비밀이에요</button>
+                        <button type="button" onclick="clearStickerSelection()" class="bg-slate-200 rounded-xl px-4 py-3 font-bold">선택 취소</button>
+                    </div>
+                </div>
+                <div class="mt-4 text-right"><button type="button" onclick="resetPage1()" class="rounded-xl bg-slate-200 px-4 py-2 font-bold text-slate-700">↻ 처음부터 다시 하기</button></div>
             </section>
 
             <!-- Page 1 Completion Banner & Next Button -->
@@ -237,7 +247,7 @@
                 <div class="flex items-center space-x-3 text-left">
                     <span class="text-5xl">🎉</span>
                     <div>
-                        <h3 class="text-xl font-black">구분하기 성공! 완성이예요!</h3>
+                        <h3 class="text-xl font-black">구분하기 성공! 완성이에요!</h3>
                         <p class="text-sm font-bold opacity-90">안심 정보와 소중한 비밀을 모두 바르게 찾았어요.</p>
                     </div>
                 </div>
@@ -495,7 +505,7 @@
 
             <div class="text-center">
                 <span class="text-5xl inline-block mb-1">🎉</span>
-                <h3 class="text-2xl font-black text-indigo-900">나만의 멋진 자기소개 카드 완성이예요!</h3>
+                <h3 class="text-2xl font-black text-indigo-900">나만의 멋진 자기소개 카드 완성이에요!</h3>
                 <p class="text-xs sm:text-sm font-bold text-slate-500 mt-1">안심할 수 있는 정보로 만들어진 소개 카드입니다.</p>
             </div>
 
@@ -561,13 +571,13 @@
         // Page 1 Items (Interleaved Safe & Secret for anti-memorization & engaging learning)
         const ITEMS = [
             { id: 'safe-food', category: 'safe', title: '내가 좋아하는 음식', icon: '🍕', desc: '떡볶이, 치킨 등 좋아하는 음식 이야기' },
-            { id: 'secret-address', category: 'secret', title: '우리 집 상세 주소', icon: '🏠', desc: '집 주소는 모르는 사람에게 알려주지 않아요' },
+            { id: 'secret-address', category: 'secret', title: '우리 집 상세 주소', icon: '🏠', desc: '상세 주소는 모르는 사람이나 인터넷에 함부로 공개하지 않아요' },
             { id: 'safe-hobby', category: 'safe', title: '내 취미와 특기', icon: '🎨', desc: '그림 그리기, 음악 듣기 등 좋아하는 취미' },
-            { id: 'secret-id', category: 'secret', title: '주민등록번호', icon: '🆔', desc: '가장 소중한 개인 식별 비밀번호예요' },
+            { id: 'secret-id', category: 'secret', title: '주민등록번호', icon: '🆔', desc: '나를 구별할 수 있는 중요한 개인정보예요' },
             { id: 'safe-color', category: 'safe', title: '좋아하는 색깔', icon: '🌈', desc: '파란색, 노란색 등 좋아하는 색깔 이야기' },
             { id: 'secret-pw', category: 'secret', title: '우리 집 도어락 비밀번호', icon: '🔑', desc: '비밀번호는 나만 알고 있어야 해요' },
             { id: 'safe-animal', category: 'safe', title: '좋아하는 동물', icon: '🐶', desc: '강아지, 고양이 등 귀여운 동물 이야기' },
-            { id: 'secret-phone', category: 'secret', title: '나와 가족 전화번호', icon: '📱', desc: '전화번호는 아무에게나 보여주지 않아요' },
+            { id: 'secret-phone', category: 'secret', title: '나와 가족 전화번호', icon: '📱', desc: '전화번호는 모르는 사람이나 인터넷에 함부로 공개하지 않아요' },
             { id: 'safe-dream', category: 'safe', title: '내 멋진 꿈과 장래희망', icon: '🌟', desc: '내가 되고 싶은 멋진 꿈 이야기' },
             { id: 'secret-bank', category: 'secret', title: '통장 및 돈 정보', icon: '💳', desc: '돈이나 통장에 관한 정보는 비밀이에요' }
         ];
@@ -664,6 +674,9 @@
         let activeTab = 1;
         let draggedItemId = null;
         let placedItems = { safe: [], secret: [] };
+        let selectedStickerId = null;
+        let mistakeCounts = {};
+        let lastSpokenText = ''; 
         let page2Selections = { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null };
 
         // Generated Prompt States for Toggle (KR vs EN)
@@ -936,6 +949,11 @@
                 card.ondragstart = (e) => handleDragStart(e, item.id);
                 card.ondragend = handleDragEnd;
                 card.onclick = () => handleStickerClick(item);
+                card.tabIndex = 0;
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `${item.title} 스티커 선택`);
+                card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStickerClick(item); } };
+                if (selectedStickerId === item.id) card.classList.add('ring-4', 'ring-indigo-500', 'bg-indigo-100', 'border-indigo-600');
 
                 card.innerHTML = `
                     <button type="button" 
@@ -1005,39 +1023,85 @@
         }
 
         function handleStickerClick(item) {
-            speakText(`${item.title}. 이 정보는 말해도 되는 소개 카드에 넣을까요, 비밀 보관함에 넣을까요?`);
+            selectedStickerId = item.id;
+            renderStickerPool();
+            document.getElementById('selectedStickerLabel').textContent = `${item.icon} ${item.title}`;
+            document.getElementById('clickChoicePanel').classList.remove('hidden');
+            speakText(`${item.title}. 말해도 되는 소개 카드에 넣을까요? 비밀 보관함에 넣을까요?`);
+        }
+
+        function clearStickerSelection() {
+            selectedStickerId = null;
+            document.getElementById('clickChoicePanel').classList.add('hidden');
+            renderStickerPool();
+        }
+
+        function placeSelectedSticker(zone) {
+            if (!selectedStickerId) return;
+            processPlacement(selectedStickerId, zone);
+        }
+
+        function resetPage1() {
+            placedItems = { safe: [], secret: [] };
+            mistakeCounts = {};
+            selectedStickerId = null;
+            document.getElementById('secretStickersList').innerHTML = '';
+            document.getElementById('vaultPrompt').classList.remove('hidden');
+            document.getElementById('page1CompleteBanner').classList.add('hidden');
+            document.getElementById('clickChoicePanel').classList.add('hidden');
+            renderSlotsGrid(); renderStickerPool(); updatePage1Counters();
+            speakText('스티커 활동을 처음부터 다시 시작해요.');
+        }
+
+        function itemTopic(item) {
+            return item.title.replace(/^내가 /, '').replace(/^우리 집 /, '우리 집 ');
+        }
+        function mistakeHint(item) {
+            const hints = {
+                'secret-address': '우리 집 상세 주소를 모르는 사람에게 알려줘도 될까요?',
+                'secret-id': '주민등록번호를 모르는 사람에게 알려줘도 될까요?',
+                'secret-pw': '우리 집 도어락 비밀번호를 다른 사람에게 알려주면 안전할까요?',
+                'secret-phone': '나와 가족의 전화번호를 아무에게나 알려줘도 될까요?',
+                'secret-bank': '통장이나 계좌 정보를 모르는 사람에게 알려줘도 될까요?',
+                'safe-food': '좋아하는 음식은 친구에게 이야기해도 될까요?',
+                'safe-hobby': '취미와 특기는 친구에게 이야기해도 될까요?',
+                'safe-color': '좋아하는 색깔은 친구에게 이야기해도 될까요?',
+                'safe-animal': '좋아하는 동물은 친구에게 이야기해도 될까요?',
+                'safe-dream': '나의 꿈과 장래희망은 친구에게 이야기해도 될까요?'
+            };
+            return `다시 생각해 볼까요? ${hints[item.id]}`;
         }
 
         function processPlacement(itemId, targetZone) {
             const item = ITEMS.find(i => i.id === itemId);
-            if (!item) return;
-
+            if (!item || placedItems.safe.includes(itemId) || placedItems.secret.includes(itemId)) return;
             if (item.category === targetZone) {
+                placedItems[targetZone].push(itemId);
                 if (targetZone === 'safe') {
-                    placedItems.safe.push(itemId);
                     playChimeAudio();
-                    speakText(`맞아요! ${item.title}은(는) 소개 카드에 넣어도 괜찮아요.`);
+                    speakText(`정답이에요! ${item.title} 이야기는 자기소개 카드에 넣어도 좋아요.`);
                 } else {
-                    placedItems.secret.push(itemId);
                     playVaultAudio();
-                    speakText(`쉿! 정답이에요. ${item.title}은(는) 소중한 비밀 보관함에 잘 넣었어요.`);
+                    speakText(`정답이에요! ${item.title} 정보는 다른 사람에게 함부로 알려주지 않아요. 잘 지켰어요!`);
                     renderSecretTagInVault(item);
                 }
-
-                renderSlotsGrid();
-                renderStickerPool();
-                updatePage1Counters();
-                checkPage1Completion();
+                if (selectedStickerId === itemId) {
+                    selectedStickerId = null;
+                    document.getElementById('clickChoicePanel').classList.add('hidden');
+                }
+                renderSlotsGrid(); renderStickerPool(); updatePage1Counters(); checkPage1Completion();
             } else {
+                mistakeCounts[itemId] = (mistakeCounts[itemId] || 0) + 1;
                 playWarningAudio();
-                const zoneEl = targetZone === 'safe' ? document.getElementById('zoneSafe') : document.getElementById('zoneSecret');
+                const zoneEl = document.getElementById(targetZone === 'safe' ? 'zoneSafe' : 'zoneSecret');
                 zoneEl.classList.add('animate-wrong');
                 setTimeout(() => zoneEl.classList.remove('animate-wrong'), 500);
-
-                if (item.category === 'secret') {
-                    speakText(`쉿! ${item.title}은(는) 소중한 개인정보예요. 비밀 보관함에 넣어주세요.`);
+                if (mistakeCounts[itemId] === 1) {
+                    speakText(mistakeHint(item));
+                } else if (item.category === 'secret') {
+                    speakText(`${item.title} 정보는 함부로 공개하면 안 되는 소중한 개인정보예요. 오른쪽 비밀 보관함에 넣어주세요.`);
                 } else {
-                    speakText(`${item.title}은(는) 나를 소개할 때 말해도 되는 정보예요! 소개 카드에 올려주세요.`);
+                    speakText(`${item.title} 이야기는 자기소개에 사용할 수 있어요. 왼쪽 소개 카드에 넣어주세요.`);
                 }
             }
         }
@@ -1054,7 +1118,7 @@
                     <span>🔒</span>
                     <span>${item.title}</span>
                 </div>
-                <button onclick="speakText('${item.title}은 소중한 비밀 정보입니다.')" class="text-amber-800 hover:text-amber-950">🔊</button>
+                <button onclick="speakText('${item.title}. 소중하게 보호해야 하는 정보예요.')" class="text-amber-800 hover:text-amber-950">🔊</button>
             `;
             list.appendChild(tag);
         }
@@ -1184,6 +1248,25 @@
             let krPromptParts = [];
             let enPromptParts = [];
 
+            for (let i = 1; i <= 7; i++) {
+                const input = document.getElementById(`customInput${i}`);
+                if (input && input.value.trim()) checkPrivacyInput(input);
+            }
+            const missing = QUESTIONS.filter(q => {
+                const custom = document.getElementById(`customInput${q.id}`);
+                return !(custom && custom.value.trim()) && !page2Selections[q.id];
+            });
+            QUESTIONS.forEach(q => {
+                const box = document.getElementById(`qBox${q.id}`);
+                box.classList.toggle('ring-4', missing.some(m => m.id === q.id));
+                box.classList.toggle('ring-amber-400', missing.some(m => m.id === q.id));
+            });
+            if (missing.length) {
+                const first = missing[0];
+                document.getElementById(`qBox${first.id}`).scrollIntoView({behavior:'smooth', block:'center'});
+                speakText(`아직 선택하지 않은 질문이 있어요. ${first.id}번 질문에 답해 주세요.`);
+                return;
+            }
             QUESTIONS.forEach(q => {
                 let sel = page2Selections[q.id];
                 const customInput = document.getElementById(`customInput${q.id}`);
@@ -1192,9 +1275,6 @@
                     sel = { type: 'custom', label: customInput.value.trim(), icon: '✏️', en: customInput.value.trim() };
                 }
 
-                if (!sel) {
-                    sel = q.options[0];
-                }
 
                 summaryItemsHtml += `
                     <li class="flex items-center space-x-2 bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
@@ -1310,42 +1390,26 @@
 
         function speakAISummary() {
             const getVal = (qId) => {
-                let sel = page2Selections[qId];
-                const customInput = document.getElementById(`customInput${qId}`);
-                if (customInput && customInput.value.trim() !== '') {
-                    return customInput.value.trim();
-                }
-                if (!sel) sel = QUESTIONS.find(q => q.id === qId).options[0];
-                return sel.label;
+                const input = document.getElementById(`customInput${qId}`);
+                if (input && input.value.trim()) return input.value.trim();
+                return page2Selections[qId]?.label || '';
             };
-
-            const animal = getVal(1);
-            const color = getVal(2);
-            const food = getVal(3);
-            const music = getVal(4);
-            const dream = getVal(5);
-            const hobby = getVal(6);
-            const place = getVal(7);
             const nickname = document.getElementById('profileNickname').value.trim();
             const gender = document.getElementById('profileGender').value;
             const age = document.getElementById('profileAge').value;
-
-            const profileSpeech = [
-                nickname ? `별명은 ${nickname}이고요.` : '',
-                gender ? `성별은 ${gender}이고요.` : '',
-                age ? `연령대는 ${age}입니다.` : ''
-            ].filter(Boolean).join(' ');
-
-            const animalStr = getJosa(animal, '을', '를');
-            const colorStr = getJosa(color, '을', '를');
-            const foodStr = getJosa(food, '을', '를');
-            const dreamStr = getJosa(dream, '이', '가');
-            const hobbyStr = getJosa(hobby, '을', '를');
-            const placeStr = getJosa(place, '으로', '로');
-
-            const storyText = `${profileSpeech ? profileSpeech + ' ' : ''}당신은 ${animalStr} 정말 좋아하고, 멋진 ${colorStr} 좋아하며, 맛있는 ${foodStr} 즐겨 먹는군요! 신나는 ${music} 음악을 즐겨 듣고, 앞으로 멋진 ${dreamStr} 되는 꿈을 꾸고 있네요. ${hobbyStr} 가장 잘하고 좋아하며, 아름다운 ${placeStr} 떠나고 싶어하는 멋진 사람입니다!`;
-
-            speakText(storyText);
+            const lines = ['안녕하세요!'];
+            if (nickname) lines.push(`제 별명은 ${nickname}입니다.`);
+            if (gender) lines.push(`선택한 성별은 ${gender}입니다.`);
+            if (age) lines.push(`제 연령대는 ${age}입니다.`);
+            if (getVal(1)) lines.push(`제가 좋아하는 동물이나 캐릭터는 ${getVal(1)}입니다.`);
+            if (getVal(2)) lines.push(`제가 좋아하는 색깔은 ${getVal(2)}입니다.`);
+            if (getVal(3)) lines.push(`제가 좋아하는 음식은 ${getVal(3)}입니다.`);
+            if (getVal(4)) lines.push(`제가 좋아하는 음악이나 가수는 ${getVal(4)}입니다.`);
+            if (getVal(5)) lines.push(`제가 하고 싶은 일이나 꿈은 ${getVal(5)}입니다.`);
+            if (getVal(6)) lines.push(`제가 좋아하는 활동이나 특기는 ${getVal(6)}입니다.`);
+            if (getVal(7)) lines.push(`제가 가보고 싶은 장소는 ${getVal(7)}입니다.`);
+            lines.push('제 소개를 들어주셔서 감사합니다!');
+            speakText(lines.join(' '));
         }
 
         /* ---------------------------------------------------
