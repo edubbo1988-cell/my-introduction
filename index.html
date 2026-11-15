@@ -128,6 +128,11 @@
                 <span class="text-base sm:text-lg">🔊</span>
                 <span class="hidden sm:inline">설명 듣기</span>
             </button>
+            <button type="button" onclick="stopSpeech()" aria-label="음성안내 멈추기"
+                    class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-3 sm:px-4 rounded-2xl shadow flex items-center space-x-1.5 text-xs sm:text-sm transition active:scale-95">
+                <span class="text-base sm:text-lg">⏹</span>
+                <span class="hidden sm:inline">음성 멈추기</span>
+            </button>
         </div>
     </header>
 
@@ -837,6 +842,12 @@
             }
         }
 
+        function stopSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
         function speakPageGuide() {
             if (activeTab === 1) {
                 speakText('1페이지, 내 정보 안심 지킴이입니다. 말해도 되는 정보와 소중한 비밀 정보를 손이나 마우스로 끌어 알맞은 상자에 구분해 보세요.');
@@ -1324,7 +1335,8 @@
                 { kr: '밝고 친근한 웹툰 일러스트', en: 'bright friendly webtoon illustration' },
                 { kr: '부드러운 수채화 일러스트', en: 'soft watercolor illustration' },
                 { kr: '아기자기한 클레이 아트', en: 'playful clay art illustration' },
-                { kr: '깔끔한 플랫 벡터 일러스트', en: 'clean flat vector illustration' }
+                { kr: '깔끔한 플랫 벡터 일러스트', en: 'clean flat vector illustration' },
+                { kr: '따뜻한 시네마틱 3D 애니메이션 영화 스타일', en: 'warm cinematic 3D animated feature film style, expressive large eyes, soft realistic lighting, detailed hair and fabric textures, gentle warm colors, charming stylized characters, cinematic depth of field' }
             ];
             const selectedStyle = illustrationStyles[Math.floor(Math.random() * illustrationStyles.length)];
 
